@@ -10,6 +10,72 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
 </head>
+<script>
+    console.log("🟢 Script de reparación ejecutándose...");
+    
+    // Verificar si las funciones existen, si no, las forzamos
+    if (typeof iniciarExamen === 'undefined') {
+        console.warn("⚠️ iniciarExamen no existe, forzando definición...");
+        
+        // Forzar la función desde el script que ya está cargado
+        eval(`
+            function iniciarExamen() {
+                console.log("🟢 Iniciando examen (desde reparación)...");
+                
+                if (typeof BANCO_PREGUNTAS === 'undefined' || BANCO_PREGUNTAS.length === 0) {
+                    alert("❌ Error: No se encontró el banco de preguntas.");
+                    return;
+                }
+                
+                const cantidad = parseInt(document.getElementById('cantidad-slider').value);
+                const shuffled = [...BANCO_PREGUNTAS].sort(() => Math.random() - 0.5);
+                window.preguntas = shuffled.slice(0, cantidad);
+                window.respuestas = new Array(cantidad).fill(null);
+                window.preguntasMarcadas = new Array(cantidad).fill(false);
+                window.preguntaActual = 0;
+                window.examenFinalizado = false;
+                
+                document.getElementById('config-screen').classList.add('hidden');
+                document.getElementById('exam-screen').classList.remove('hidden');
+                document.getElementById('results-screen').classList.add('hidden');
+                document.getElementById('header-stats').classList.remove('hidden');
+                
+                document.getElementById('total-count').textContent = cantidad;
+                document.getElementById('progress-text').textContent = 'Pregunta 1 de ' + cantidad;
+                
+                if (window.preguntas.length > 0) {
+                    document.getElementById('q-text').textContent = window.preguntas[0]?.pregunta || 'Cargando...';
+                }
+                
+                alert("✅ Examen iniciado correctamente con " + cantidad + " preguntas.");
+                console.log("✅ Examen iniciado correctamente");
+            }
+        `);
+        
+        console.log("✅ Función iniciarExamen forzada correctamente");
+    } else {
+        console.log("✅ iniciarExamen ya existe como:", typeof iniciarExamen);
+    }
+    
+    // Verificar actualizarCantidad
+    if (typeof actualizarCantidad === 'undefined') {
+        console.warn("⚠️ actualizarCantidad no existe, forzando...");
+        window.actualizarCantidad = function() {
+            const slider = document.getElementById('cantidad-slider');
+            const display = document.getElementById('cantidad-display');
+            if (slider && display) {
+                display.textContent = slider.value;
+            }
+            console.log("✅ Cantidad actualizada a:", slider?.value);
+        };
+        console.log("✅ actualizarCantidad forzada");
+    }
+    
+    console.log("🔍 === FIN DIAGNÓSTICO ===");
+    console.log("📄 iniciarExamen:", typeof iniciarExamen);
+    console.log("📄 actualizarCantidad:", typeof actualizarCantidad);
+    console.log("📄 BANCO_PREGUNTAS:", typeof BANCO_PREGUNTAS);
+</script>
 <body>
 
     <div id="app" class="max-w-5xl mx-auto px-4 py-6">
