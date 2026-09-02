@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simulador de Exámenes - Inmunología UNICEN</title>
+    
+    <!-- ===== HOJAS DE ESTILO ===== -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div id="app" class="max-w-5xl mx-auto px-4 py-6">
+        
+        <!-- ============================================= -->
+        <!-- HEADER                                         -->
+        <!-- ============================================= -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-dna"></i>
+                </div>
+                <div>
+                    <h1 class="header-title" id="titulo-materia">Simulador de Exámenes</h1>
+                    <p class="header-subtitle" id="subtitulo-materia">Inmunología Básica y Clínica • UNICEN</p>
+                </div>
+            </div>
+            <div id="header-stats" class="hidden header-stats">
+                <span class="stat-badge">
+                    <i class="fa-regular fa-clock"></i>
+                    <span id="timer-display">00:00</span>
+                </span>
+                <span class="stat-badge">
+                    <i class="fa-regular fa-circle-check"></i>
+                    <span id="progress-counter">0/0</span>
+                </span>
+            </div>
+        </header>
+
+        <!-- ============================================= -->
+        <!-- CONFIGURACIÓN                                  -->
+        <!-- ============================================= -->
+        <div id="config-screen" class="config-screen">
+            <div class="config-icon">
+                <i class="fa-solid fa-microscope"></i>
+            </div>
+            <h2 class="config-title" id="config-titulo">Evaluación de Inmunología</h2>
+            <p class="config-description" id="config-descripcion">
+                Este examen utiliza un banco de <strong id="total-preguntas-banco">0</strong> preguntas únicas.
+                <br />Cada vez que cargas la página, las preguntas se presentan en <strong>orden aleatorio</strong>.
+            </p>
+
+            <div class="config-card">
+                <label class="config-label">
+                    <i class="fa-solid fa-list-check"></i>
+                    Cantidad de preguntas (5 - 35)
+                </label>
+                <div class="config-slider-container">
+                    <input type="range" id="cantidad-slider" min="5" max="35" value="20" class="config-slider" oninput="actualizarCantidad()" />
+                    <span id="cantidad-display" class="config-slider-value">20</span>
+                </div>
+                <div class="config-slider-labels">
+                    <span>5</span>
+                    <span>35</span>
+                </div>
+            </div>
+
+            <div class="config-buttons">
+                <button onclick="iniciarExamen()" class="btn-primary">
+                    <i class="fa-solid fa-play"></i> Comenzar Examen
+                </button>
+                <button onclick="mezclarTodo()" class="btn-secondary" title="Mezclar preguntas">
+                    <i class="fa-solid fa-shuffle"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================= -->
+        <!-- EXAMEN                                         -->
+        <!-- ============================================= -->
+        <div id="exam-screen" class="hidden">
+            
+            <!-- Barra de progreso -->
+            <div class="progress-container">
+                <div class="progress-header">
+                    <span id="progress-text">Pregunta 1 de 20</span>
+                    <span id="progress-percent">0% Completado</span>
+                </div>
+                <div class="progress-bar-track">
+                    <div id="progress-bar" class="progress-bar-fill" style="width: 0.5%"></div>
+                </div>
+            </div>
+
+            <!-- Tarjeta de pregunta -->
+            <div class="question-card">
+                <div class="question-header">
+                    <span id="q-tag" class="question-tag">Tema</span>
+                    <span id="q-number" class="question-number">Pregunta 1/20</span>
+                </div>
+                <h3 id="q-text" class="question-text">Cargando pregunta...</h3>
+                <div id="options-container" class="options-container"></div>
+
+                <div class="question-actions">
+                    <button id="prev-btn" onclick="prevQuestion()" class="btn-nav">
+                        <i class="fa-solid fa-chevron-left"></i> Anterior
+                    </button>
+                    <div class="question-actions-right">
+                        <button onclick="marcarPregunta()" id="flag-btn" class="btn-flag" title="Marcar para revisar">
+                            <i class="fa-regular fa-flag"></i>
+                        </button>
+                        <button id="action-btn" onclick="siguienteAccion()" class="btn-action">
+                            <span id="action-text">Siguiente</span>
+                            <i id="action-icon" class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mini mapa de navegación -->
+            <div class="mini-map-container">
+                <div class="mini-map-header">
+                    <span class="mini-map-label">Navegación rápida</span>
+                    <span class="mini-map-count"><span id="answered-count">0</span>/<span id="total-count">0</span> respondidas</span>
+                </div>
+                <div id="mini-map" class="mini-map-grid"></div>
+            </div>
+        </div>
+
+        <!-- ============================================= -->
+        <!-- RESULTADOS                                     -->
+        <!-- ============================================= -->
+        <div id="results-screen" class="hidden">
+            <div class="results-card">
+                <div id="result-icon" class="results-icon">🏆</div>
+                <h2 id="result-title" class="results-title">Excelente</h2>
+                <p id="result-subtitle" class="results-subtitle">Has completado el examen de Inmunología</p>
+                
+                <div class="results-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Puntaje</span>
+                        <span id="final-score" class="stat-value stat-blue">0/0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Porcentaje</span>
+                        <span id="final-percent" class="stat-value stat-dark">0%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Correctas</span>
+                        <span id="final-correct" class="stat-value stat-green">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Tiempo</span>
+                        <span id="final-time" class="stat-value stat-dark">00:00</span>
+                    </div>
+                </div>
+
+                <div class="results-actions">
+                    <button onclick="reiniciar()" class="btn-primary">
+                        <i class="fa-solid fa-rotate-right"></i> Nuevo Examen
+                    </button>
+                    <button onclick="toggleReview()" id="review-toggle-btn" class="btn-dark">
+                        <i class="fa-solid fa-eye"></i> Ver Respuestas
+                    </button>
+                </div>
+            </div>
+
+            <!-- Revisión de respuestas -->
+            <div id="review-section" class="hidden review-section">
+                <h3 class="review-title">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    Revisión de Respuestas
+                </h3>
+                <div id="review-container" class="review-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================= -->
+    <!-- SCRIPTS                                       -->
+    <!-- ============================================= -->
+    <script src="preguntas/inmunologia.js"></script>
+    <script src="script.js"></script>
+
+</body>
+</html>
