@@ -1,9 +1,10 @@
 // ============================================================
+// SCRIPT COMPLETO - SIMULADOR DE INMUNOLOGÍA
+// ============================================================
+
+// ============================================================
 // VARIABLES GLOBALES
 // ============================================================
-let BANCO_PREGUNTAS = [];
-
-// Estado del examen
 let preguntas = [];
 let respuestas = [];
 let preguntasMarcadas = [];
@@ -11,57 +12,58 @@ let preguntaActual = 0;
 let timerSegundos = 0;
 let timerInterval = null;
 let examenFinalizado = false;
+let reviewVisible = false;
 
 // ============================================================
-// CONFIGURACIÓN INICIAL
+// CONFIGURACIÓN
 // ============================================================
 function actualizarCantidad() {
     const slider = document.getElementById('cantidad-slider');
     const display = document.getElementById('cantidad-display');
-    display.textContent = slider.value;
-}
-
-// ============================================================
-// CARGAR BANCO DE PREGUNTAS
-// ============================================================
-function cargarBancoPreguntas() {
-    if (typeof BANCO_PREGUNTAS === 'undefined' || BANCO_PREGUNTAS.length === 0) {
-        console.error('❌ No se pudo cargar el banco de preguntas.');
-        alert('Error: No se encontró el banco de preguntas.');
-        return false;
+    if (slider && display) {
+        display.textContent = slider.value;
     }
-
-    document.getElementById('total-preguntas-banco').textContent = BANCO_PREGUNTAS.length;
-    console.log(`✅ Banco de ${BANCO_PREGUNTAS.length} preguntas cargado.`);
-    return true;
 }
 
 // ============================================================
-// FUNCIONES PRINCIPALES
+// INICIAR EXAMEN
 // ============================================================
 function iniciarExamen() {
-    if (BANCO_PREGUNTAS.length === 0) {
-        alert('❌ Error: No hay preguntas disponibles.');
+    console.log("🟢 Iniciando examen...");
+    
+    // Verificar que BANCO_PREGUNTAS existe
+    if (typeof BANCO_PREGUNTAS === 'undefined') {
+        alert("❌ Error: No se encontró el banco de preguntas.");
+        console.error("❌ BANCO_PREGUNTAS no está definido");
         return;
     }
-
+    
+    if (BANCO_PREGUNTAS.length === 0) {
+        alert("❌ Error: El banco de preguntas está vacío.");
+        console.error("❌ BANCO_PREGUNTAS está vacío");
+        return;
+    }
+    
+    console.log("✅ Banco cargado con " + BANCO_PREGUNTAS.length + " preguntas");
+    
     const cantidad = parseInt(document.getElementById('cantidad-slider').value);
-
-    // Seleccionar preguntas aleatorias y ÚNICAS del banco
+    
+    // Seleccionar preguntas aleatorias
     const shuffled = [...BANCO_PREGUNTAS].sort(() => Math.random() - 0.5);
     preguntas = shuffled.slice(0, cantidad);
     respuestas = new Array(cantidad).fill(null);
     preguntasMarcadas = new Array(cantidad).fill(false);
     preguntaActual = 0;
     examenFinalizado = false;
-
+    
+    // Mostrar examen
     document.getElementById('config-screen').classList.add('hidden');
     document.getElementById('exam-screen').classList.remove('hidden');
     document.getElementById('results-screen').classList.add('hidden');
     document.getElementById('header-stats').classList.remove('hidden');
-
+    
     document.getElementById('total-count').textContent = cantidad;
-
+    
     // Iniciar temporizador
     timerSegundos = 0;
     if (timerInterval) clearInterval(timerInterval);
@@ -69,81 +71,64 @@ function iniciarExamen() {
         timerSegundos++;
         const mins = String(Math.floor(timerSegundos / 60)).padStart(2, '0');
         const secs = String(timerSegundos % 60).padStart(2, '0');
-        document.getElementById('timer-display').textContent = `${mins}:${secs}`;
+        document.getElementById('timer-display').textContent = mins + ':' + secs;
     }, 1000);
-
+    
     cargarPregunta();
     actualizarMiniMapa();
-}
-
-function mezclarTodo() {
-    if (document.getElementById('exam-screen').classList.contains('hidden')) return;
-    const indices = preguntas.map((_, i) => i);
-    const shuffledIndices = indices.sort(() => Math.random() - 0.5);
-    const nuevasPreguntas = shuffledIndices.map(i => preguntas[i]);
-    const nuevasRespuestas = shuffledIndices.map(i => respuestas[i]);
-    const nuevasMarcadas = shuffledIndices.map(i => preguntasMarcadas[i]);
-    preguntas = nuevasPreguntas;
-    respuestas = nuevasRespuestas;
-    preguntasMarcadas = nuevasMarcadas;
-    preguntaActual = 0;
-    cargarPregunta();
-    actualizarMiniMapa();
+    
+    console.log("✅ Examen iniciado correctamente");
 }
 
 // ============================================================
-// FUNCIONES DE NAVEGACIÓN
+// CARGAR PREGUNTA
 // ============================================================
 function cargarPregunta() {
-    if (examenFinalizado) return;
+    if (examenFinalizado || !preguntas || preguntas.length === 0) return;
     const p = preguntas[preguntaActual];
     if (!p) return;
-
+    
     const total = preguntas.length;
     const respondidas = respuestas.filter(r => r !== null).length;
-
+    
     // Actualizar progreso
-    document.getElementById('progress-text').textContent = `Pregunta ${preguntaActual + 1} de ${total}`;
-    document.getElementById('progress-percent').textContent =
-        `${Math.round(((preguntaActual + 1) / total) * 100)}% Completado`;
-    document.getElementById('progress-bar').style.width = `${((preguntaActual + 1) / total) * 100}%`;
-    document.getElementById('progress-counter').textContent = `${respondidas}/${total}`;
+    document.getElementById('progress-text').textContent = 'Pregunta ' + (preguntaActual + 1) + ' de ' + total;
+    document.getElementById('progress-percent').textContent = Math.round(((preguntaActual + 1) / total) * 100) + '% Completado';
+    document.getElementById('progress-bar').style.width = ((preguntaActual + 1) / total) * 100 + '%';
+    document.getElementById('progress-counter').textContent = respondidas + '/' + total;
     document.getElementById('answered-count').textContent = respondidas;
-
+    
     // Categoría y número
     document.getElementById('q-tag').textContent = p.tema || 'General';
-    document.getElementById('q-number').textContent = `Pregunta ${preguntaActual + 1}/${total}`;
-
+    document.getElementById('q-number').textContent = 'Pregunta ' + (preguntaActual + 1) + '/' + total;
+    
     // Texto de la pregunta
     document.getElementById('q-text').textContent = p.pregunta;
-
+    
     // Opciones
     const container = document.getElementById('options-container');
     container.innerHTML = '';
     const letras = ['A', 'B', 'C', 'D', 'E'];
     const seleccionada = respuestas[preguntaActual];
-
+    
     p.opciones.forEach((opcion, idx) => {
         const div = document.createElement('div');
-        div.className =
-            `option-card ${seleccionada === idx ? 'selected' : ''}`;
-        div.innerHTML = `
-            <div class="option-letter">${letras[idx]}</div>
-            <span class="option-text">${opcion.substring(3)}</span>
-        `;
-        div.onclick = () => seleccionarOpcion(idx);
+        div.className = 'option-card' + (seleccionada === idx ? ' selected' : '');
+        div.innerHTML = '<div class="option-letter">' + letras[idx] + '</div><span class="option-text">' + opcion.substring(3) + '</span>';
+        div.onclick = function() { seleccionarOpcion(idx); };
         container.appendChild(div);
     });
-
+    
     // Botón de acción
     const actionBtn = document.getElementById('action-btn');
     const actionText = document.getElementById('action-text');
     const actionIcon = document.getElementById('action-icon');
-
+    
     if (seleccionada === null) {
         actionText.textContent = 'Seleccionar y avanzar';
         actionIcon.className = 'fa-solid fa-chevron-right';
-        actionBtn.onclick = () => {
+        actionBtn.className = 'btn-action';
+        actionBtn.onclick = function() {
             if (respuestas[preguntaActual] === null) {
                 alert('Por favor selecciona una respuesta.');
                 return;
@@ -156,37 +141,35 @@ function cargarPregunta() {
                 finalizarExamen();
             }
         };
-        actionBtn.className = 'btn-action';
     } else if (preguntaActual === total - 1) {
         actionText.textContent = 'Finalizar Examen';
         actionIcon.className = 'fa-solid fa-flag-checkered';
-        actionBtn.onclick = finalizarExamen;
         actionBtn.className = 'btn-action btn-finish';
+        actionBtn.onclick = finalizarExamen;
     } else {
         actionText.textContent = 'Siguiente';
         actionIcon.className = 'fa-solid fa-chevron-right';
-        actionBtn.onclick = () => {
+        actionBtn.className = 'btn-action';
+        actionBtn.onclick = function() {
             if (preguntaActual < total - 1) {
                 preguntaActual++;
                 cargarPregunta();
                 actualizarMiniMapa();
             }
         };
-        actionBtn.className = 'btn-action';
     }
-
-    // Botón anterior
+    
     document.getElementById('prev-btn').disabled = preguntaActual === 0;
-
-    // Botón marcar
-    const flagBtn = document.getElementById('flag-btn');
-    const flagIcon = flagBtn.querySelector('i');
-    if (preguntasMarcadas[preguntaActual]) {
-        flagIcon.className = 'fa-solid fa-flag';
-    } else {
-        flagIcon.className = 'fa-regular fa-flag';
+    
+    const flagIcon = document.querySelector('#flag-btn i');
+    if (flagIcon) {
+        if (preguntasMarcadas[preguntaActual]) {
+            flagIcon.className = 'fa-solid fa-flag';
+        } else {
+            flagIcon.className = 'fa-regular fa-flag';
+        }
     }
-
+    
     actualizarMiniMapa();
 }
 
@@ -209,8 +192,6 @@ function prevQuestion() {
     }
 }
 
-function siguienteAccion() {}
-
 function marcarPregunta() {
     if (examenFinalizado) return;
     preguntasMarcadas[preguntaActual] = !preguntasMarcadas[preguntaActual];
@@ -220,15 +201,18 @@ function marcarPregunta() {
 
 function actualizarMiniMapa() {
     const container = document.getElementById('mini-map');
+    if (!container) return;
     container.innerHTML = '';
-    preguntas.forEach((_, idx) => {
+    if (!preguntas || preguntas.length === 0) return;
+    
+    preguntas.forEach(function(_, idx) {
         const btn = document.createElement('div');
         btn.className = 'mini-btn';
         btn.textContent = idx + 1;
         if (idx === preguntaActual) btn.classList.add('current');
         if (respuestas[idx] !== null) btn.classList.add('answered');
         if (preguntasMarcadas[idx]) btn.classList.add('flagged');
-        btn.onclick = () => {
+        btn.onclick = function() {
             preguntaActual = idx;
             cargarPregunta();
             actualizarMiniMapa();
@@ -244,36 +228,35 @@ function finalizarExamen() {
     if (examenFinalizado) return;
     examenFinalizado = true;
     if (timerInterval) clearInterval(timerInterval);
-
-    const sinResponder = respuestas.filter(r => r === null).length;
+    
+    const sinResponder = respuestas.filter(function(r) { return r === null; }).length;
     if (sinResponder > 0) {
-        if (!confirm(`⚠️ Tienes ${sinResponder} preguntas sin responder. ¿Deseas finalizar de todas formas?`)) {
+        if (!confirm('⚠️ Tienes ' + sinResponder + ' preguntas sin responder. ¿Deseas finalizar de todas formas?')) {
             examenFinalizado = false;
             cargarPregunta();
             return;
         }
     }
-
+    
     document.getElementById('exam-screen').classList.add('hidden');
     document.getElementById('results-screen').classList.remove('hidden');
-
-    // Calcular resultados
+    
     let correctas = 0;
-    preguntas.forEach((p, idx) => {
+    preguntas.forEach(function(p, idx) {
         if (respuestas[idx] === p.correcta) correctas++;
     });
-
+    
     const total = preguntas.length;
     const porcentaje = Math.round((correctas / total) * 100);
-
-    document.getElementById('final-score').textContent = `${correctas}/${total}`;
-    document.getElementById('final-percent').textContent = `${porcentaje}%`;
+    
+    document.getElementById('final-score').textContent = correctas + '/' + total;
+    document.getElementById('final-percent').textContent = porcentaje + '%';
     document.getElementById('final-correct').textContent = correctas;
-
+    
     const mins = String(Math.floor(timerSegundos / 60)).padStart(2, '0');
     const secs = String(timerSegundos % 60).padStart(2, '0');
-    document.getElementById('final-time').textContent = `${mins}:${secs}`;
-
+    document.getElementById('final-time').textContent = mins + ':' + secs;
+    
     let icono, titulo, subtitulo;
     if (porcentaje >= 80) {
         icono = '🏆';
@@ -292,7 +275,7 @@ function finalizarExamen() {
         titulo = 'Es momento de estudiar';
         subtitulo = 'No te desanimes. Revisa el material y vuelve a intentarlo.';
     }
-
+    
     document.getElementById('result-icon').textContent = icono;
     document.getElementById('result-title').textContent = titulo;
     document.getElementById('result-subtitle').textContent = subtitulo;
@@ -301,13 +284,11 @@ function finalizarExamen() {
 // ============================================================
 // REVISIÓN DE RESPUESTAS
 // ============================================================
-let reviewVisible = false;
-
 function toggleReview() {
     reviewVisible = !reviewVisible;
     const section = document.getElementById('review-section');
     const btn = document.getElementById('review-toggle-btn');
-
+    
     if (reviewVisible) {
         section.classList.remove('hidden');
         btn.innerHTML = '<i class="fa-solid fa-eye-slash"></i> Ocultar Respuestas';
@@ -321,20 +302,20 @@ function toggleReview() {
 function construirRevision() {
     const container = document.getElementById('review-container');
     container.innerHTML = '';
-
-    preguntas.forEach((p, idx) => {
+    
+    preguntas.forEach(function(p, idx) {
         const esCorrecta = respuestas[idx] === p.correcta;
         const respondida = respuestas[idx] !== null;
-
+        
         const div = document.createElement('div');
-        div.className = `review-item ${esCorrecta ? 'correct' : 'incorrect'}`;
-
+        div.className = 'review-item' + (esCorrecta ? ' correct' : ' incorrect');
+        
         let respuestaUsuario = 'No respondida';
         if (respondida) {
             respuestaUsuario = p.opciones[respuestas[idx]];
         }
         const respuestaCorrecta = p.opciones[p.correcta];
-
+        
         div.innerHTML = `
             <div class="review-header">
                 <span class="review-header-status ${esCorrecta ? 'correct' : 'incorrect'}">
@@ -354,9 +335,6 @@ function construirRevision() {
     });
 }
 
-// ============================================================
-// REINICIAR
-// ============================================================
 function reiniciar() {
     if (timerInterval) clearInterval(timerInterval);
     document.getElementById('results-screen').classList.add('hidden');
@@ -369,13 +347,35 @@ function reiniciar() {
     examenFinalizado = false;
 }
 
+function mezclarTodo() {
+    if (document.getElementById('exam-screen').classList.contains('hidden')) return;
+    if (!preguntas || preguntas.length === 0) return;
+    
+    const indices = preguntas.map(function(_, i) { return i; });
+    const shuffledIndices = indices.sort(function() { return Math.random() - 0.5; });
+    const nuevasPreguntas = shuffledIndices.map(function(i) { return preguntas[i]; });
+    const nuevasRespuestas = shuffledIndices.map(function(i) { return respuestas[i]; });
+    const nuevasMarcadas = shuffledIndices.map(function(i) { return preguntasMarcadas[i]; });
+    preguntas = nuevasPreguntas;
+    respuestas = nuevasRespuestas;
+    preguntasMarcadas = nuevasMarcadas;
+    preguntaActual = 0;
+    cargarPregunta();
+    actualizarMiniMapa();
+}
+
 // ============================================================
 // INICIO
 // ============================================================
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ DOM cargado');
     actualizarCantidad();
-    const cargado = cargarBancoPreguntas();
-    if (cargado) {
-        console.log(`✅ Simulador listo. ${BANCO_PREGUNTAS.length} preguntas disponibles.`);
+    console.log('✅ Script cargado correctamente');
+    
+    if (typeof BANCO_PREGUNTAS !== 'undefined' && BANCO_PREGUNTAS.length > 0) {
+        document.getElementById('total-preguntas-banco').textContent = BANCO_PREGUNTAS.length;
+        console.log('✅ Banco de ' + BANCO_PREGUNTAS.length + ' preguntas disponible');
+    } else {
+        console.warn('⚠️ Banco de preguntas no disponible');
     }
 });

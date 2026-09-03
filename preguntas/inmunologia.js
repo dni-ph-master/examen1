@@ -577,6 +577,7 @@ function expandirBancoPreguntas() {
         }
     }
 
+    // Reemplazar el array original
     BANCO_PREGUNTAS.length = 0;
     BANCO_PREGUNTAS.push(...expandidas.slice(0, 200));
 }
@@ -584,3 +585,4 @@ function expandirBancoPreguntas() {
 expandirBancoPreguntas();
 
 console.log(`✅ Banco de ${BANCO_PREGUNTAS.length} preguntas cargado.`);
+console.log(`📊 Temas: ${[...new Set(BANCO_PREGUNTAS.map(p => p.tema))].join(', ')}`);

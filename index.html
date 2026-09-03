@@ -3,94 +3,30 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Simulador de Exámenes - Inmunología UNICEN</title>
+    <title>DALE UNA PROBADITA - MICRO2 Inmunología</title>
     
-    <!-- ===== HOJAS DE ESTILO ===== -->
+    <!-- ===== FUENTES ===== -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    
+    <!-- ===== ESTILOS EXTERNOS ===== -->
     <link rel="stylesheet" href="style.css" />
 </head>
-<script>
-    console.log("🟢 Script de reparación ejecutándose...");
-    
-    // Verificar si las funciones existen, si no, las forzamos
-    if (typeof iniciarExamen === 'undefined') {
-        console.warn("⚠️ iniciarExamen no existe, forzando definición...");
-        
-        // Forzar la función desde el script que ya está cargado
-        eval(`
-            function iniciarExamen() {
-                console.log("🟢 Iniciando examen (desde reparación)...");
-                
-                if (typeof BANCO_PREGUNTAS === 'undefined' || BANCO_PREGUNTAS.length === 0) {
-                    alert("❌ Error: No se encontró el banco de preguntas.");
-                    return;
-                }
-                
-                const cantidad = parseInt(document.getElementById('cantidad-slider').value);
-                const shuffled = [...BANCO_PREGUNTAS].sort(() => Math.random() - 0.5);
-                window.preguntas = shuffled.slice(0, cantidad);
-                window.respuestas = new Array(cantidad).fill(null);
-                window.preguntasMarcadas = new Array(cantidad).fill(false);
-                window.preguntaActual = 0;
-                window.examenFinalizado = false;
-                
-                document.getElementById('config-screen').classList.add('hidden');
-                document.getElementById('exam-screen').classList.remove('hidden');
-                document.getElementById('results-screen').classList.add('hidden');
-                document.getElementById('header-stats').classList.remove('hidden');
-                
-                document.getElementById('total-count').textContent = cantidad;
-                document.getElementById('progress-text').textContent = 'Pregunta 1 de ' + cantidad;
-                
-                if (window.preguntas.length > 0) {
-                    document.getElementById('q-text').textContent = window.preguntas[0]?.pregunta || 'Cargando...';
-                }
-                
-                alert("✅ Examen iniciado correctamente con " + cantidad + " preguntas.");
-                console.log("✅ Examen iniciado correctamente");
-            }
-        `);
-        
-        console.log("✅ Función iniciarExamen forzada correctamente");
-    } else {
-        console.log("✅ iniciarExamen ya existe como:", typeof iniciarExamen);
-    }
-    
-    // Verificar actualizarCantidad
-    if (typeof actualizarCantidad === 'undefined') {
-        console.warn("⚠️ actualizarCantidad no existe, forzando...");
-        window.actualizarCantidad = function() {
-            const slider = document.getElementById('cantidad-slider');
-            const display = document.getElementById('cantidad-display');
-            if (slider && display) {
-                display.textContent = slider.value;
-            }
-            console.log("✅ Cantidad actualizada a:", slider?.value);
-        };
-        console.log("✅ actualizarCantidad forzada");
-    }
-    
-    console.log("🔍 === FIN DIAGNÓSTICO ===");
-    console.log("📄 iniciarExamen:", typeof iniciarExamen);
-    console.log("📄 actualizarCantidad:", typeof actualizarCantidad);
-    console.log("📄 BANCO_PREGUNTAS:", typeof BANCO_PREGUNTAS);
-</script>
 <body>
 
-    <div id="app" class="max-w-5xl mx-auto px-4 py-6">
+    <div id="app">
         
-        <!-- ============================================= -->
-        <!-- HEADER                                         -->
-        <!-- ============================================= -->
+        <!-- ========================================== -->
+        <!-- HEADER                                      -->
+        <!-- ========================================== -->
         <header class="header">
             <div class="header-left">
                 <div class="logo-icon">
                     <i class="fa-solid fa-dna"></i>
                 </div>
                 <div>
-                    <h1 class="header-title" id="titulo-materia">Simulador de Exámenes</h1>
-                    <p class="header-subtitle" id="subtitulo-materia">Inmunología Básica y Clínica • UNICEN</p>
+                    <h1 class="header-title">Dale una repasada</h1>
+                    <p class="header-subtitle">Inmunología Básica y Clínica • MICRO2</p>
                 </div>
             </div>
             <div id="header-stats" class="hidden header-stats">
@@ -105,15 +41,18 @@
             </div>
         </header>
 
-        <!-- ============================================= -->
-        <!-- CONFIGURACIÓN                                  -->
-        <!-- ============================================= -->
+        <!-- ========================================== -->
+        <!-- PANTALLA DE CONFIGURACIÓN                   -->
+        <!-- ========================================== -->
         <div id="config-screen" class="config-screen">
+            
             <div class="config-icon">
                 <i class="fa-solid fa-microscope"></i>
             </div>
-            <h2 class="config-title" id="config-titulo">Evaluación de Inmunología</h2>
-            <p class="config-description" id="config-descripcion">
+            
+            <h2 class="config-title">Evaluación de Inmunología</h2>
+            
+            <p class="config-description">
                 Este examen utiliza un banco de <strong id="total-preguntas-banco">0</strong> preguntas únicas.
                 <br />Cada vez que cargas la página, las preguntas se presentan en <strong>orden aleatorio</strong>.
             </p>
@@ -123,43 +62,41 @@
                     <i class="fa-solid fa-list-check"></i>
                     Cantidad de preguntas (5 - 35)
                 </label>
+                
                 <div class="config-slider-container">
                     <input type="range" id="cantidad-slider" min="5" max="35" value="20" class="config-slider" oninput="actualizarCantidad()" />
                     <span id="cantidad-display" class="config-slider-value">20</span>
                 </div>
+                
                 <div class="config-slider-labels">
                     <span>5</span>
                     <span>35</span>
                 </div>
             </div>
 
-            <div class="config-buttons">
-                <button onclick="iniciarExamen()" class="btn-primary">
-                    <i class="fa-solid fa-play"></i> Comenzar Examen
-                </button>
-                <button onclick="mezclarTodo()" class="btn-secondary" title="Mezclar preguntas">
-                    <i class="fa-solid fa-shuffle"></i>
-                </button>
-            </div>
+            <button id="btn-iniciar" class="btn-primary" onclick="iniciarExamen()">
+                <i class="fa-solid fa-play"></i> Comenzar Examen
+            </button>
+            <button onclick="mezclarTodo()" class="btn-secondary" title="Mezclar preguntas">
+                <i class="fa-solid fa-shuffle"></i>
+            </button>
         </div>
 
-        <!-- ============================================= -->
-        <!-- EXAMEN                                         -->
-        <!-- ============================================= -->
+        <!-- ========================================== -->
+        <!-- PANTALLA DE EXAMEN                         -->
+        <!-- ========================================== -->
         <div id="exam-screen" class="hidden">
             
-            <!-- Barra de progreso -->
             <div class="progress-container">
                 <div class="progress-header">
                     <span id="progress-text">Pregunta 1 de 20</span>
-                    <span id="progress-percent">0% Completado</span>
+                    <span id="progress-percent">5% Completado</span>
                 </div>
                 <div class="progress-bar-track">
-                    <div id="progress-bar" class="progress-bar-fill" style="width: 0.5%"></div>
+                    <div id="progress-bar" class="progress-bar-fill" style="width: 5%"></div>
                 </div>
             </div>
 
-            <!-- Tarjeta de pregunta -->
             <div class="question-card">
                 <div class="question-header">
                     <span id="q-tag" class="question-tag">Tema</span>
@@ -176,7 +113,7 @@
                         <button onclick="marcarPregunta()" id="flag-btn" class="btn-flag" title="Marcar para revisar">
                             <i class="fa-regular fa-flag"></i>
                         </button>
-                        <button id="action-btn" onclick="siguienteAccion()" class="btn-action">
+                        <button id="action-btn" class="btn-action" onclick="siguienteAccion()">
                             <span id="action-text">Siguiente</span>
                             <i id="action-icon" class="fa-solid fa-chevron-right"></i>
                         </button>
@@ -184,7 +121,6 @@
                 </div>
             </div>
 
-            <!-- Mini mapa de navegación -->
             <div class="mini-map-container">
                 <div class="mini-map-header">
                     <span class="mini-map-label">Navegación rápida</span>
@@ -194,10 +130,11 @@
             </div>
         </div>
 
-        <!-- ============================================= -->
-        <!-- RESULTADOS                                     -->
-        <!-- ============================================= -->
+        <!-- ========================================== -->
+        <!-- PANTALLA DE RESULTADOS                     -->
+        <!-- ========================================== -->
         <div id="results-screen" class="hidden">
+            
             <div class="results-card">
                 <div id="result-icon" class="results-icon">🏆</div>
                 <h2 id="result-title" class="results-title">Excelente</h2>
@@ -221,7 +158,7 @@
                         <span id="final-time" class="stat-value stat-dark">00:00</span>
                     </div>
                 </div>
-
+                
                 <div class="results-actions">
                     <button onclick="reiniciar()" class="btn-primary">
                         <i class="fa-solid fa-rotate-right"></i> Nuevo Examen
@@ -232,7 +169,6 @@
                 </div>
             </div>
 
-            <!-- Revisión de respuestas -->
             <div id="review-section" class="hidden review-section">
                 <h3 class="review-title">
                     <i class="fa-solid fa-clipboard-list"></i>
@@ -241,11 +177,12 @@
                 <div id="review-container" class="review-container"></div>
             </div>
         </div>
+
     </div>
 
-    <!-- ============================================= -->
-    <!-- SCRIPTS                                       -->
-    <!-- ============================================= -->
+    <!-- ========================================== -->
+    <!-- SCRIPTS                                     -->
+    <!-- ========================================== -->
     <script src="preguntas/inmunologia.js"></script>
     <script src="script.js"></script>
 
